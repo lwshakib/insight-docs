@@ -1,0 +1,104 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+
+enum Sender {
+  USER
+  ASSISTANT
+}
+ 
+model User {
+  id        String   @id @default(uuid())
+  clerkId    String   @unique
+  firstName String?
+  lastName String?
+  ipAddress String?
+  credits   Int      @default(1000)
+  messages  Message[]
+  chats     Chat[]
+  documents Document[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+  @@index([clerkId])
+}
+
+model Document {
+  id        String   @id @default(uuid())
+  clerkId    String
+  fileName     String
+  content_url String
+  content_type String
+  chatId      String
+  chat        Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  size      Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("documents")
+  @@index([chatId])
+}
+
+model Chat {
+  id        String   @id @default(uuid())
+  clerkId    String
+  title     String
+  documents Document[]
+  messages  Message[]
+  notes     Notes[]
+  userId    String
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("chats")
+  @@index([clerkId])
+}
+
+
+model Message {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clerkId    String
+  message   String
+  sender    Sender
+  chatId    String
+  chat      Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("messages")
+  @@index([chatId])
+}
+
+
+model Notes {
+  id        String   @id @default(uuid())
+  clerkId    String
+  title     String
+  content   String
+  chatId    String
+  chat      Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("notes")
+  @@index([clerkId])
+}
